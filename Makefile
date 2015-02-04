@@ -1,20 +1,24 @@
-GROUP=eavatartech
-NAME=cassandra
-VERSION=2.1.2
 
-all: build tag
+SUBDIRS = base single cluster tools
 
-build: Dockerfile overlayfs.tar
-	docker build --rm -t $(GROUP)/$(NAME):$(VERSION) .
+.PHONY: subdirs $(SUBDIRS)
 
-overlayfs.tar:
-	cd overlayfs && docker build --rm -t $(NAME)-builder .
-	docker run --rm $(NAME)-builder cat /overlayfs.tar > overlayfs.tar
-	docker rmi $(NAME)-builder
+subdirs: $(SUBDIRS)
 
-tag:
-	@if ! docker images $(GROUP)/$(NAME) | awk '{ print $$2 }' | grep -q -F $(VERSION); then echo "$(NAME) version $(VERSION) is not yet built. Please run 'make build'"; false; fi
-	docker tag $(GROUP)/$(NAME):$(VERSION) $(GROUP)/$(NAME):latest
+$(SUBDIRS):
+	$(MAKE) -C $@
 
-clean:
-	rm -f overlayfs.tar
+base: base/Dockerfile base/Makefile base/overlayfs/Dockerfile
+	cd base && make
+
+single: base single/Dockerfile
+	cd single && make
+
+cluster: base cluster/Dockerfile
+	cd cluster && make
+
+tools: base tools/Dockerfile
+	cd tools && make
+
+
+
