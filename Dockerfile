@@ -1,4 +1,4 @@
-FROM eavatartech/jre
+FROM eavatart/jre
 
 ADD overlayfs.tar /
 
